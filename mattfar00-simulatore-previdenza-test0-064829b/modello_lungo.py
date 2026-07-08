@@ -115,7 +115,13 @@ def ricostruisci_da_benchmark(rend_reale: pd.Series, benchmark: list,
         return None
     rend_reale = rend_reale.dropna()
     if len(rend_reale) < 24:
-        return None
+        # NESSUN NAV (o troppo poco): serie = MIX BENCHMARK PURO, alfa 0.
+        # Serve per fondi appena aggiunti senza CSV quote: simulabili da
+        # subito, con l'avvertenza che costi/tracking reali non sono inclusi
+        # (inserire l'ISC in anagrafica quando disponibile).
+        return {"estesa": mix, "giunzione": None, "alpha_annuo": 0.0,
+                "pesi_dichiarati": pesi_dich, "rbsa": None,
+                "mesi_reali": len(rend_reale), "mesi_estesi": len(mix)}
     X = pd.DataFrame({k: serie[k] for k in pesi_dich if k in serie})
     rbsa = stima_pesi_rbsa(rend_reale, X)
 
@@ -395,16 +401,22 @@ def render_tab_modello(ctx):
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=cum_e.index, y=cum_e.values,
                                          name="Serie estesa", line=dict(width=2)))
-                fig.add_vline(x=ric["giunzione"], line_dash="dot",
-                              annotation_text="inizio NAV reale")
+                if ric["giunzione"] is not None:
+                    fig.add_vline(x=ric["giunzione"], line_dash="dot",
+                                  annotation_text="inizio NAV reale")
+                else:
+                    st.caption("ℹ️ Nessun NAV nel CSV: serie = mix benchmark "
+                               "PURO (alfa 0, costi non inclusi).")
                 fig.update_layout(height=300, yaxis_type="log",
                                   yaxis_title="Crescita di 1€ (log)")
                 st.plotly_chart(fig, use_container_width=True)
                 if cfg_c.get("ricostruzione") != "consentita":
-                    st.caption("🔒 `ricostruzione: off` in anagrafica: questa serie "
-                               "NON alimenta i motori. Per usarla: verifica i pesi "
-                               "sul DPI, poi metti `\"ricostruzione\": \"consentita\"` "
-                               "nel JSON del fondo.")
+                    st.caption("🔒 Di default questa serie NON alimenta i motori: "
+                               "si attiva col pulsante per-comparto in sidebar "
+                               "('Factor modeling' → 'Ricostruisci ...') dopo aver "
+                               "verificato R² e pesi qui sopra. Per renderla "
+                               "attiva di default: `\"ricostruzione\": "
+                               "\"consentita\"` nel JSON del fondo.")
                 if cfg_c.get("da_verificare"):
                     st.caption("⚠️ Da verificare: " + "; ".join(cfg_c["da_verificare"]))
 
