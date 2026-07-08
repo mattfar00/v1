@@ -1,0 +1,49 @@
+{
+  "nome": "Previdenza Credito",
+  "csv": "credito.csv",
+  "sito": "",
+  "_note": "MODELLO GENERICO di fondo pensione bancario (nel credito ABI ogni gruppo ha il proprio fondo aziendale: Intesa, UniCredit, BPM...). Non esistendo quote pubbliche nazionali, i tre profili tipici sono definiti SOLO dal benchmark e si simulano via ricostruzione (mix puro). Se hai i valori quota del TUO fondo aziendale, mettili in data/credito.csv (colonne: anno,mese,Prudente,Bilanciato,Azionario) e diventano la fonte primaria.",
+
+  "comparti": {
+    "Prudente": {
+      "nome_ufficiale": "Profilo prudente (generico fondo bancario)",
+      "classe_rischio": "prudente",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vusxx", "peso": 0.20, "descrizione_indice": "monetario"},
+        {"serie": "vbmfx", "peso": 0.65, "descrizione_indice": "obbligazionario euro/globale"},
+        {"serie": "world_composite", "peso": 0.15, "descrizione_indice": "azionario globale"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "consentita",
+      "fonte": "profilo tipico — personalizzare sul proprio fondo aziendale",
+      "da_verificare": ["pesi del proprio fondo", "ISC"]
+    },
+    "Bilanciato": {
+      "nome_ufficiale": "Profilo bilanciato (generico fondo bancario)",
+      "classe_rischio": "bilanciato",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vbmfx", "peso": 0.55, "descrizione_indice": "obbligazionario euro/globale"},
+        {"serie": "world_composite", "peso": 0.45, "descrizione_indice": "azionario globale"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "consentita",
+      "fonte": "profilo tipico — personalizzare sul proprio fondo aziendale",
+      "da_verificare": ["pesi del proprio fondo", "ISC"]
+    },
+    "Azionario": {
+      "nome_ufficiale": "Profilo azionario (generico fondo bancario)",
+      "classe_rischio": "azionario",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "world_composite", "peso": 0.75, "descrizione_indice": "azionario globale"},
+        {"serie": "vbmfx", "peso": 0.25, "descrizione_indice": "obbligazionario"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "consentita",
+      "fonte": "profilo tipico — personalizzare sul proprio fondo aziendale",
+      "da_verificare": ["pesi del proprio fondo", "ISC"]
+    }
+  }
+}

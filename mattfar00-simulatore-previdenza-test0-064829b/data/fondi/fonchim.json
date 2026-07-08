@@ -1,0 +1,48 @@
+{
+  "nome": "Fonchim",
+  "csv": "fonchim.csv",
+  "sito": "https://www.fonchim.it",
+  "_note": "Fondo dei chimici-farmaceutici, il piu' antico negoziale (1997). Comparti: Moneta (monetario), Stabilita' (bilanciato prudente, garanzia di restituzione? verificare), Crescita (bilanciato azionario). Il CSV quote e' un TEMPLATE VUOTO: compilarlo dai valori quota pubblicati su fonchim.it, oppure simulare via ricostruzione dal benchmark (mix puro finche' il CSV e' vuoto). Pesi benchmark STIMATI: verificare su Nota informativa/DPI.",
+
+  "comparti": {
+    "Moneta": {
+      "nome_ufficiale": "Fonchim Moneta",
+      "classe_rischio": "prudente",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vusxx", "peso": 0.80, "descrizione_indice": "monetario euro"},
+        {"serie": "vbmfx", "peso": 0.20, "descrizione_indice": "obbligazionario breve"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "STIMA — verificare su DPI Fonchim",
+      "da_verificare": ["pesi benchmark", "eventuale garanzia", "ISC"]
+    },
+    "Stabilità": {
+      "nome_ufficiale": "Fonchim Stabilità",
+      "classe_rischio": "bilanciato",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vbmfx", "peso": 0.70, "descrizione_indice": "obbligazionario governativo euro/globale"},
+        {"serie": "world_composite", "peso": 0.30, "descrizione_indice": "azionario globale"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "STIMA (storicamente ~30% azionario) — verificare su DPI",
+      "da_verificare": ["pesi benchmark", "ISC"]
+    },
+    "Crescita": {
+      "nome_ufficiale": "Fonchim Crescita",
+      "classe_rischio": "azionario",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "world_composite", "peso": 0.60, "descrizione_indice": "azionario globale"},
+        {"serie": "vbmfx", "peso": 0.40, "descrizione_indice": "obbligazionario"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "STIMA (storicamente ~60% azionario) — verificare su DPI",
+      "da_verificare": ["pesi benchmark", "ISC"]
+    }
+  }
+}

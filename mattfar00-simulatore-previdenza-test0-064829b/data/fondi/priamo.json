@@ -1,0 +1,35 @@
+{
+  "nome": "Priamo",
+  "csv": "priamo.csv",
+  "sito": "https://www.fondopriamo.it",
+  "_note": "Fondo di autoferrotranvieri/TPL e, dal 2017 (confluenza Previlog), della logistica/trasporto merci. Due comparti. CSV quote = TEMPLATE VUOTO: compilare dai valori quota su fondopriamo.it, oppure simulare via ricostruzione dal benchmark. Pesi STIMATI: verificare su Nota informativa/DPI.",
+
+  "comparti": {
+    "Garantito Protezione": {
+      "nome_ufficiale": "Priamo Garantito Protezione",
+      "classe_rischio": "prudente",
+      "garanzia": true,
+      "obiettivo": "rivalutazione del TFR",
+      "floor_montante": "capitale versato (verificare condizioni esatte)",
+      "benchmark": [],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "comparto garantito (gestione assicurativa)",
+      "da_verificare": ["condizioni garanzia", "ISC"],
+      "_nota": "Gestione assicurativa: non ricostruire (senza NAV non e' simulabile finche' non si compila il CSV; il floor di garanzia e' gia' nel motore)."
+    },
+    "Bilanciato Sviluppo": {
+      "nome_ufficiale": "Priamo Bilanciato Sviluppo",
+      "classe_rischio": "bilanciato",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vbmfx", "peso": 0.60, "descrizione_indice": "obbligazionario governativo euro/globale"},
+        {"serie": "world_composite", "peso": 0.40, "descrizione_indice": "azionario globale"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "STIMA (~35-40% azionario) — verificare su DPI Priamo",
+      "da_verificare": ["pesi benchmark", "ISC", "quota azionaria esatta"]
+    }
+  }
+}
