@@ -385,6 +385,17 @@ def render_pac_avanzato(ctx):
                     corr = (np.corrcoef(serie_mat, rowvar=False)
                             if len(classi) > 1 else np.array([[1.0]]))
                     n_mesi = len(_df_ext)
+                else:
+                    _corta = min(_est, key=lambda c: len(_est[c]))
+                    st.warning(
+                        f"⚠️ Estensione SENZA effetto: lo storico congiunto "
+                        f"resta {n_mesi} mesi perché la classe più corta "
+                        f"(**{_corta}**, {len(_est[_corta])} mesi) vincola "
+                        f"l'intersezione. Se una classe non ha proxy (vedi "
+                        f"diagnostica sotto) limita tutte le altre: valuta "
+                        f"di toglierla dal portafoglio o di accettare lo "
+                        f"storico corto."
+                    )
                 st.caption("🔬 " + " · ".join(f"{c}: {d}" for c, d in _diag.items()))
             except Exception as e:
                 st.warning(f"Estensione non riuscita ({e}): uso solo lo storico ETF.")
