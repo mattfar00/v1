@@ -1,0 +1,39 @@
+{
+  "nome": "Commercio Conflavoro PMI",
+  "fondo": "Fon.Te",
+  "contrib_lav_pct": 0.0055,
+  "contrib_azienda_pct": 0.0155,
+  "contrib_azienda_u35_pct": 0.0155,
+  "tfr_pct": 0.0691,
+  "costo_iniziale": 15.5,
+  "costo_fisso": 22.0,
+  "mensilita": 14,
+  "livelli": {
+    "Quadro": 2986.95,
+    "I": 2507.2,
+    "II": 2236.65,
+    "III": 1985.15,
+    "IV": 1785.0,
+    "V": 1662.0,
+    "VI": 1543.05,
+    "VII": 1399.35
+  },
+  "scatti_valore_livello": {
+    "Quadro": 26.0,
+    "I": 25.0,
+    "II": 23.0,
+    "III": 22.0,
+    "IV": 21.5,
+    "V": 21.0,
+    "VI": 20.5,
+    "VII": 20.0
+  },
+  "scatto_ogni_anni": 3,
+  "scatti_max": 10,
+  "comparti": [
+    "Conservativo",
+    "Sviluppo",
+    "Dinamico",
+    "Crescita"
+  ]
+}

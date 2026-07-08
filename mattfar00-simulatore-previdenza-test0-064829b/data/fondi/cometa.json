@@ -1,0 +1,73 @@
+{
+  "nome": "Cometa",
+  "csv": "cometa.csv",
+  "sito": "https://www.cometafondo.it",
+  "_note": "Benchmark da ricerca web lug-2026 (gestione-finanziaria, DPI): confermare su Nota informativa Parte II 'Le opzioni di investimento' e DPI vigente. classe_rischio pilota l'ancora di shrinkage. ricostruzione: 'off' finche' da_verificare non e' vuoto.",
+
+  "comparti": {
+    "Monetario": {
+      "nome_ufficiale": "Cometa Monetario Plus",
+      "classe_rischio": "prudente",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vusxx", "peso": 1.0,
+         "descrizione_indice": "obbligazionario breve termine euro / monetario"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "cometafondo.it/gestione-finanziaria (obbligazionario puro)",
+      "da_verificare": ["indice esatto del benchmark", "ISC"]
+    },
+    "Garantito": {
+      "nome_ufficiale": "Cometa Sicurezza (gestione assicurativa)",
+      "classe_rischio": "prudente",
+      "garanzia": true,
+      "obiettivo": "rendimento comparabile alla rivalutazione del TFR",
+      "floor_montante": "capitale versato (verificare condizioni esatte della garanzia)",
+      "benchmark": [],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "cometafondo.it — comparto garantito",
+      "da_verificare": ["condizioni garanzia", "ISC"],
+      "_nota": "Gestione assicurativa: il mix benchmark descrive male il payoff. NON ricostruire: storico reale + shrinkage + floor (Blocco D)."
+    },
+    "Bilanciato": {
+      "nome_ufficiale": "Cometa Reddito",
+      "classe_rischio": "bilanciato",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vbmfx", "peso": 0.40,
+         "descrizione_indice": "titoli di Stato area euro (JPM EMU)"},
+        {"serie": "vbmfx", "peso": 0.30,
+         "descrizione_indice": "governativi globali con copertura cambio"},
+        {"serie": "vbmfx", "peso": 0.10,
+         "descrizione_indice": "corporate globali con copertura cambio"},
+        {"serie": "veurx", "peso": 0.10,
+         "descrizione_indice": "azionario area euro"},
+        {"serie": "world_composite", "peso": 0.10,
+         "descrizione_indice": "azionario globale ex-euro"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "ricerca web lug-2026: 40% gov euro + 30% gov globale hedged + 10% corp globale hedged + 10% az. euro + 10% az. globale ex-euro (az. max 30%, vol ex-ante 8%)",
+      "da_verificare": ["conferma pesi su DPI vigente", "corrispondenza colonna CSV 'Bilanciato' = Reddito", "ISC"]
+    },
+    "Azionario": {
+      "nome_ufficiale": "Cometa Crescita",
+      "classe_rischio": "azionario",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "world_composite", "peso": 0.35,
+         "descrizione_indice": "MSCI World ex Europe"},
+        {"serie": "veurx", "peso": 0.20,
+         "descrizione_indice": "MSCI Europe + FTSE Italia"},
+        {"serie": "vbmfx", "peso": 0.45,
+         "descrizione_indice": "JPM Global (governativi globali)"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "ricerca web lug-2026: azionario 45-65% (effettivo ~57%), benchmark JPM Global + MSCI Europe + MSCI World ex Europe + FTSE Italia — pesi esatti DA DPI",
+      "da_verificare": ["pesi esatti dei 4 indici dal DPI", "corrispondenza colonna CSV 'Azionario' = Crescita", "ISC"]
+    }
+  }
+}

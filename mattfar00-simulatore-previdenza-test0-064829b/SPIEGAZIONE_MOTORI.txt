@@ -1,0 +1,164 @@
+===========================================================================
+SPIEGAZIONE DEI MOTORI DI SIMULAZIONE — Fondo pensione e PAC
+===========================================================================
+(aggiornato alle modifiche di luglio 2026: semantica CAGR, shrinkage del
+drift verso ancora di lungo periodo, correzione di Ito', code grasse)
+
+---------------------------------------------------------------------------
+1. MOTORE DEL FONDO PENSIONE — Block-bootstrap mensile
+---------------------------------------------------------------------------
+Dati di partenza: le quote mensili REALI dei comparti (data/cometa.csv,
+data/fonte.csv), trasformate in rendimenti mensili. Il fondo non usa MAI
+assunzioni parametriche: ogni mese simulato e' un mese realmente accaduto.
+
+Funzionamento (genera_rendimenti_block_bootstrap, app_previdenza.py):
+per ogni scenario si pescano a caso blocchi CONTIGUI di B mesi (default 12)
+dallo storico del comparto e si concatenano fino a coprire la durata della
+simulazione. I blocchi contigui preservano l'autocorrelazione di breve
+periodo (una crisi e' una sequenza di mesi, non mesi isolati); con 2000
+scenari si ottiene la banda P10-P90.
+
+PERCHE' DA SOLO SOVRASTIMAVA. Due difetti:
+a) Bias di campione: molti comparti hanno meno di 20 anni di storico
+   (Cometa Garantito dal 2020, Fon.Te Sviluppo dal 2015, gli altri Fon.Te
+   dal 2008). Se il campione copre soprattutto un regime favorevole, il
+   bootstrap lo ricampiona all'infinito e il montante a 30-40 anni eredita
+   quel regime per intero.
+b) Bias di composizione: concatenando blocchi indipendenti, il montante
+   ATTESO cresce alla media aritmetica del campione, che e' sempre sopra la
+   geometrica (volatility drag ~ sigma^2/2).
+
+CORREZIONE: SHRINKAGE DEL DRIFT (attivabile in sidebar, default ON).
+Si calcola il CAGR del campione (tasso composto reale dello storico), lo si
+combina con un'ancora di lungo periodo:
+      CAGR_corretto = w * CAGR_storico + (1-w) * ancora,   w = mesi/240
+(240 mesi = 20 anni: da li' in su lo storico ha piena fiducia). Poi la serie
+storica viene RICENTRATA moltiplicativamente: ogni (1+r) e' scalato di una
+costante cosi' che il CAGR della serie diventi esattamente il target.
+Volatilita', sequenze e forma della distribuzione restano intatte: cambia
+solo il tasso di composizione. Le ancore sono per classe di comparto
+(azionario ~6,5% nominale, bilanciato ~4%, garantito ~2,5%) e modificabili:
+al loro posto si possono inserire Capital Market Assumptions aggiornate
+(JPMorgan LTCMA, Vanguard, BlackRock — pubbliche, riviste ogni anno).
+
+Il pannello "Correzione del drift applicata" mostra, per ogni comparto:
+mesi disponibili, CAGR storico, CAGR corretto e peso dello storico.
+
+---------------------------------------------------------------------------
+2. PAC "SEMPLICE" — GBM lognormale parametrico
+---------------------------------------------------------------------------
+(genera_rendimenti_gbm, pac_engine.py)
+L'utente fornisce due numeri: rendimento e volatilita' annui. Il motore
+genera rendimenti mensili lognormali i.i.d.
+
+SEMANTICA NUOVA: lo slider e' un CAGR (rendimento composto annuo).
+La parametrizzazione fissa il log-drift a  mu_log = log( (1+CAGR)^(1/12) ),
+quindi la traiettoria MEDIANA compone esattamente al CAGR dichiarato.
+Prima lo slider era una media aritmetica: sembrava simile ma il montante
+mediano era ambiguo e, con default 7%, risultava gonfiato e fuorviante.
+La differenza media aritmetica vs CAGR e' il volatility drag (~sigma^2/2,
+cioe' ~1,1 punti con vol 15%): la correzione di Ito' e' incorporata nella
+parametrizzazione, NON va sottratta di nuovo a mano.
+Riferimenti per lo slider (nominali lordi): azionario globale ~6,5%
+secolare; portafoglio 60/40 ~5%; obbligazionario ~2,5-3%.
+
+CODE GRASSE (opzione, default ON): gli shock gaussiani sono sostituiti da
+una T di Student con nu=5 gradi di liberta', riscalata a varianza unitaria.
+Stessa volatilita', ma i mesi estremi (crash) sono piu' frequenti, come nei
+dati reali: il P10 diventa piu' severo, la mediana non cambia.
+
+---------------------------------------------------------------------------
+3. PAC "PORTAFOGLIO TICKER" — GBM multivariato con Cholesky
+---------------------------------------------------------------------------
+(stima_parametri_portafoglio + genera_rendimenti_portafoglio_gbm)
+Si scaricano da Yahoo Finance i prezzi mensili aggiustati dei ticker scelti
+(default 15 anni), si stimano medie, volatilita' e covarianza mensili. La
+matrice di covarianza viene fattorizzata con Cholesky: gli shock simulati
+dei singoli asset restano correlati come nello storico.
+
+PERCHE' SOVRASTIMAVA: il drift era la media aritmetica mensile del campione
+— che con 10 anni di soli bull market annualizzava a rendimenti a due cifre,
+poi estrapolati per 30-40 anni. Inoltre l'app mostrava come "rendimento
+composto" quello che in realta' era la media aritmetica annualizzata.
+
+CORREZIONI:
+a) La stima di riferimento e' ora il CAGR del portafoglio (geometrico,
+   quello a cui il campione ha composto DAVVERO).
+b) Shrinkage (default): CAGR_target = w*CAGR_storico + (1-w)*ancora, con
+   w = mesi/240 e ancora impostabile (default 6,5%; usare una CMA pesata
+   per la propria allocazione e' l'uso previsto). In alternativa: drift
+   manuale (CAGR scelto dall'utente) o "solo storico" (sconsigliato,
+   mostrato con avviso).
+c) Correzione di Ito' esplicita: il target CAGR viene convertito in drift
+   aritmetico mensile con  mu_arit = (1+CAGR)^(1/12) - 1 + sigma_p_m^2 / 2,
+   dove sigma_p_m e' la vol mensile di portafoglio (da Cholesky e pesi).
+   Cosi' la MEDIANA composta atterra sul CAGR target, senza doppio conteggio
+   del volatility drag. La traslazione del drift e' una costante uguale per
+   tutti gli asset: volatilita' e correlazioni restano quelle storiche.
+d) Code grasse opzionali: T di Student multivariata con fattore di coda
+   CONDIVISO tra gli asset dello stesso mese — nei crash reali tutto
+   scende insieme (le correlazioni "salgono" nelle code).
+
+---------------------------------------------------------------------------
+4. TAB PAC UNIFICATO — MULTI-ASSET (fino a 4 classi)
+---------------------------------------------------------------------------
+(pac_avanzato.py) Il tab assorbe anche la vecchia modalita' "semplice" e
+accetta TUTTI gli ETF del catalogo piu' AZIONI SINGOLE da input manuale.
+Ogni ticker viene classificato in una di 5 classi — Azionario,
+Obbligazionario, Oro/Materie prime, Immobiliare, Azioni singole — con
+preselezione automatica (dal catalogo o dal nome: un ticker manuale senza
+indizi da ETF nel nome viene riconosciuto come azione singola), sempre
+correggibile. Le azioni singole hanno un bucket dedicato con avviso
+esplicito: rischio idiosincratico non diversificato, stima storica poco
+affidabile, e nessun motore modella il default della singola azienda. Per ogni classe
+presente si costruisce una serie mensile equal-weight; da queste si stimano
+CAGR, sigma e la MATRICE di correlazione tra le classi. Avvisi automatici
+per volatilita' alta (>25%/anno: azioni singole, settoriali, leva, materie
+prime). In alternativa: INPUT MANUALI a 2 classi (CAGR/vol/rho; in questo
+caso il motore e' solo GBM, il bootstrap richiede serie reali).
+
+Il derisking e' OPZIONALE (checkbox, default spento): da spento si imposta
+una sola allocazione costante; da acceso il glidepath e' PER CLASSE, con
+pesi iniziali e finali e rampa lineare tra i due anni scelti (righe
+normalizzate a 100%).
+Il ribilanciamento vende i bucket sovrappesati (tassando la plusvalenza
+realizzata pro-quota, con aliquota per classe: opzione 12,5% sul bucket
+obbligazionario) e reinveste il netto nei sottopesati in proporzione al
+fabbisogno. Il decumulo preleva pro-quota da tutti i bucket. Ancore di
+shrinkage per classe (default: azionario 6,5%, obbligazionario 2,5%, oro
+3,5%, immobiliare 5,5% — modificabili/CMA). Due motori:
+
+a) BLOCK-BOOTSTRAP CONGIUNTO: pesca blocchi con gli STESSI indici da
+   tutte le serie di classe -> correlazioni empiriche preservate per
+   costruzione, code reali incluse. Col drift corretto (shrinkage o
+   manuale) le serie vengono prima ricentrate sul CAGR target per classe
+   (stessa tecnica del fondo).
+b) GBM-CHOLESKY: lognormale multivariato, semantica CAGR (mediana = CAGR),
+   mean reversion opzionale in stile Ornstein-Uhlenbeck (richiamo del
+   log-rendimento cumulato verso il trend: riduce gli scenari estremi
+   persistenti), code grasse opzionali (T di Student congiunta).
+
+Il resto del modulo (glidepath di derisking, ribilanciamento con tasse sul
+realizzato, bollo 0,2%, costi, decumulo con probabilita' di successo,
+deflazione in euro reali) opera sui percorsi generati ed e' invariato.
+
+---------------------------------------------------------------------------
+5. CONFRONTO FONDO vs PAC: perche' ora e' piu' equo
+---------------------------------------------------------------------------
+Prima il fondo componeva alla media (spesso su storici corti e favorevoli)
+e il PAC a un 7% aritmetico o alla media di un decennio di bull market: il
+confronto era gonfiato su entrambi i lati, ma in misura diversa e non
+controllabile. Ora entrambi i lati ragionano in CAGR, con lo stesso
+meccanismo di shrinkage verso ancore esplicite e dichiarate: se i numeri
+sono sbagliati, almeno sono sbagliati in modo trasparente e correggibile.
+
+LIMITI RESIDUI (dichiarati, non risolti):
+- L'inflazione e' deterministica (slider), non stocastica ne' correlata ai
+  rendimenti: su 40 anni e' la semplificazione piu' pesante rimasta.
+- I rendimenti mensili sono i.i.d. tra blocchi/mesi simulati: niente regimi
+  macro persistenti oltre la lunghezza del blocco.
+- Le ancore di lungo periodo sono un giudizio, non un fatto: usare CMA
+  aggiornate mitiga ma non elimina l'incertezza sul drift.
+- Storico UCITS in EUR vs eventuali proxy: nessuna modellazione esplicita
+  del rischio di cambio.
+===========================================================================

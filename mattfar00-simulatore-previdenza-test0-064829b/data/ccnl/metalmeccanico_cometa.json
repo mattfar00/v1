@@ -1,0 +1,41 @@
+{
+  "nome": "Metalmeccanico",
+  "fondo": "Cometa",
+  "contrib_lav_pct": 0.012,
+  "contrib_azienda_pct": 0.02,
+  "contrib_azienda_u35_pct": 0.022,
+  "tfr_pct": 0.0691,
+  "costo_iniziale": 5.16,
+  "costo_fisso": 12.0,
+  "mensilita": 13,
+  "livelli": {
+    "D1": 1784.94,
+    "D2": 1979.37,
+    "C1": 2022.12,
+    "C2": 2064.88,
+    "C3": 2211.43,
+    "B1": 2370.33,
+    "B2": 2542.98,
+    "B3": 2838.99,
+    "A1": 2907.01
+  },
+  "scatti_valore_livello": {
+    "D1": 21.59,
+    "D2": 25.05,
+    "C1": 25.05,
+    "C2": 26.75,
+    "C3": 29.64,
+    "B1": 32.43,
+    "B2": 36.41,
+    "B3": 40.96,
+    "A1": 40.96
+  },
+  "scatto_ogni_anni": 2,
+  "scatti_max": 5,
+  "comparti": [
+    "Garantito",
+    "Bilanciato",
+    "Azionario",
+    "Monetario"
+  ]
+}

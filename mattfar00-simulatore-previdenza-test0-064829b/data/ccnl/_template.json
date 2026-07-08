@@ -1,0 +1,56 @@
+{
+  "_istruzioni": "Questo file NON viene caricato (i file che iniziano con _ vengono ignorati dal loader). Copialo con un nuovo nome (es. mio_ccnl.json) e compila i campi per aggiungere un CCNL/fondo negoziale.",
+
+  "nome": "Nome del solo CCNL da mostrare nel menu a tendina (es. 'Edilizia'). NON includere qui il fondo: il fondo è il campo separato qui sotto e viene già mostrato dall'app accanto alla selezione.",
+  "fondo": "Nome del fondo pensione negoziale associato (es. 'Prevedi'). Deve combaciare con il nome del fondo usato nei CSV storici in data/<fondo>.csv, altrimenti il resampling storico non troverà i dati e l'app segnalerà un errore.",
+
+  "contrib_lav_pct": 0.012,
+  "_nota_contrib_lav_pct": "Percentuale minima di contributo LAVORATORE sui minimi tabellari, per avere diritto al contributo aziendale (es. 0.012 = 1,2%)",
+
+  "contrib_azienda_pct": 0.02,
+  "_nota_contrib_azienda_pct": "Percentuale di contributo AZIENDA sui minimi tabellari, per lavoratori over 35 (o dove non prevista distinzione età)",
+
+  "contrib_azienda_u35_pct": 0.022,
+  "_nota_contrib_azienda_u35_pct": "Percentuale di contributo AZIENDA per lavoratori under 35, se il CCNL prevede un'aliquota agevolata diversa. Se non prevista, ripeti lo stesso valore di contrib_azienda_pct.",
+
+  "tfr_pct": 0.0691,
+  "_nota_tfr_pct": "Quota annua di TFR destinata al fondo (di norma 6,91% della retribuzione utile, salvo diverse previsioni contrattuali)",
+
+  "costo_iniziale": 5.16,
+  "_nota_costo_iniziale": "Costo di iscrizione una tantum al fondo, in euro (da scheda costi COVIP)",
+
+  "costo_fisso": 12.0,
+  "_nota_costo_fisso": "Costo amministrativo fisso ANNUO del fondo, in euro (da scheda costi COVIP)",
+
+  "mensilita": 13,
+  "_nota_mensilita": "Numero di mensilità annue previste dal CCNL (13 o 14, tipicamente)",
+
+  "livelli": {
+    "_nota": "Minimo tabellare MENSILE (paga base) per ciascun livello di inquadramento del CCNL. Le chiavi (es. 'D1', 'Quadro') sono libere: appariranno nel menu 'Livello di inquadramento'.",
+    "Livello1": 1500.00,
+    "Livello2": 1700.00
+  },
+
+  "scatti_valore_livello": {
+    "_nota": "Importo €/MESE di un singolo scatto di anzianità, PER LIVELLO (le chiavi devono combaciare con quelle di 'livelli'). Se il CCNL non differenzia per livello, usa lo stesso valore per tutti i livelli, oppure ometti questo campo e verrà usato 'scatto_valore' come media unica per tutti.",
+    "Livello1": 20.0,
+    "Livello2": 22.0
+  },
+
+  "scatto_valore": 20.0,
+  "_nota_scatto_valore": "Valore medio di fallback usato SOLO se un livello non è presente in 'scatti_valore_livello' (o se ometti del tutto 'scatti_valore_livello')",
+
+  "scatto_ogni_anni": 2,
+  "_nota_scatto_ogni_anni": "Ogni quanti anni di anzianità matura un nuovo scatto (es. 2 = biennale, 3 = triennale)",
+
+  "scatti_max": 5,
+  "_nota_scatti_max": "Numero massimo di scatti maturabili nel corso della carriera",
+
+  "comparti": [
+    "NomeComparto1",
+    "NomeComparto2"
+  ],
+  "_nota_comparti": "Semplice LISTA di nomi comparto. Ogni nome deve combaciare ESATTAMENTE con una colonna del CSV storico data/<fondo>.csv (es. se il tuo fondo si chiama 'Prevedi', serve data/prevedi.csv con quelle colonne). Il rendimento NON è un parametro qui: il motore usa sempre lo storico reale della quota, ricampionato dal CSV. Se un comparto non ha ancora dati storici, l'app lo segnalerà e non potrà essere simulato finché non aggiungi la colonna con lo storico nel CSV."
+}
+
+}

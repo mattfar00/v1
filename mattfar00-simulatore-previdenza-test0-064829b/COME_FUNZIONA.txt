@@ -1,0 +1,154 @@
+===========================================================================
+COME FUNZIONA IL SIMULATORE — Fondo pensione e PAC, punto per punto
+===========================================================================
+(luglio 2026 — versione con factor modeling, garanzia, rendita, validazione)
+
+---------------------------------------------------------------------------
+A. IL FLUSSO GENERALE
+---------------------------------------------------------------------------
+1. La CARRIERA (CCNL, livello, scatti, crescita, disoccupazione) genera
+   anno per anno RAL, TFR, contributo aziendale e base contributiva.
+2. Il MINIMO CCNL non e' un flusso: e' il requisito che da' diritto al
+   contributo aziendale. Se il versamento volontario dell'anno e' sotto il
+   minimo, l'aziendale va a zero (avviso in tabella).
+3. Ogni anno i flussi entrano nei motori MESE PER MESE (rata = annuo/12,
+   rendimento mensile applicato a ogni rata per i mesi residui).
+4. Output: montanti NETTI (fondo: tassa d'uscita 9-23%; PAC: 26%/12,5%
+   sulla plusvalenza; TFR azienda: tassazione separata) con banda P10-P90
+   su 2000 scenari Monte Carlo. "Fondo Netto" (TFR dentro) e "PAC+TFR
+   Netto" (TFR in azienda) sono SCENARI ALTERNATIVI, non cumulabili.
+
+---------------------------------------------------------------------------
+B. MOTORE DEL FONDO PENSIONE
+---------------------------------------------------------------------------
+1. DATI: quote mensili reali dei comparti (data/*.csv, mai modificati).
+   Struttura modulare: ogni fondo e' dichiarato in data/fondi/<fondo>.json
+   (comparti, classe di rischio, benchmark, garanzia, ricostruzione).
+   Aggiungere un fondo = 1 CSV + 1 JSON. Validazione automatica all'avvio.
+2. GENERATORE: block-bootstrap mensile (blocchi contigui di B mesi,
+   default 12) dallo storico reale del comparto: preserva sequenze,
+   code e autocorrelazione dei mesi realmente accaduti.
+3. CORREZIONE DEL DRIFT (shrinkage): il CAGR del campione viene spostato
+   verso un'ancora di lungo periodo con peso w = mesi/240. La serie e'
+   ricentrata moltiplicativamente: vol e sequenze intatte. Ancore per
+   classe di rischio (azionario 6,5%, bilanciato 4%, prudente 2,5%),
+   modificabili — usare CMA aggiornate (JPMorgan LTCMA, Vanguard) e' l'uso
+   previsto.
+4. FACTOR MODELING (opzione "serie ricostruite"): per i comparti con
+   ricostruzione consentita in anagrafica, la serie diventa: NAV reale
+   dove esiste + mix benchmark alfa-aggiustato prima (decenni di storia).
+   L'alfa (costi/tracking della gestione) e' stimato sull'overlap. La
+   qualita' si verifica nel tab Modello & Validazione: R2 della style
+   analysis >= ~0.85 e pesi RBSA coerenti coi dichiarati, altrimenti
+   lasciare off.
+5. GLIDEPATH DI COMPARTO (life-cycle): cambi di comparto pianificati
+   (es. Azionario -> Bilanciato all'anno 25 -> Garantito all'anno 33),
+   come fanno i life-cycle reali. Ogni anno usa il bootstrap del comparto
+   attivo.
+6. GARANZIA: se il comparto dell'anno ha garanzia=true, il montante non
+   scende sotto la somma dei versamenti (floor annuale). Approssimazione:
+   la garanzia reale scatta a scadenza/eventi specifici.
+7. TASSE E COSTI: i rendimenti da quota sono GIA' netti di tassa annua
+   (20%/12,5%) e costi di gestione; resta il costo fisso annuo in euro e
+   la tassa d'uscita (15% ridotta fino al 9% dopo il 15simo anno, 23%
+   riscatto ordinario). Il risparmio IRPEF da deducibilita' (fino a
+   5.164,57 euro) e' mostrato ma non reinvestito.
+
+---------------------------------------------------------------------------
+C. MOTORE DEL PAC
+---------------------------------------------------------------------------
+1. TRE MODALITA': Semplice (CAGR e vol manuali -> GBM lognormale),
+   Portafoglio ticker (parametri stimati dai prezzi Yahoo), tab PAC
+   multi-asset (fino a 5 classi: azionario, obbligazionario, oro/materie
+   prime, immobiliare, azioni singole — classificazione automatica
+   correggibile, avvisi oltre 25% di vol).
+2. SEMANTICA CAGR ovunque: gli input di rendimento sono composti annui;
+   la traiettoria MEDIANA compone esattamente a quel tasso (correzione di
+   Ito' incorporata: niente doppio conteggio del volatility drag).
+3. GENERATORI: GBM-Cholesky multivariato (correlazioni storiche, code
+   grasse T-Student opzionali con nu=5 condiviso tra le classi nello
+   stesso mese, mean reversion O-U opzionale) oppure block-bootstrap
+   CONGIUNTO (stessi indici per tutte le classi: correlazioni e code reali
+   gratis).
+4. DRIFT: shrinkage verso ancora per classe / manuale / solo storico
+   (sconsigliato). Nel bootstrap la correzione ricentra le serie.
+5. FACTOR MODELING (opzione "estendi con storia lunga"): ogni classe viene
+   estesa all'indietro col proxy statico (azionario->composite 60/30/10
+   dal 1976, obbligazionario->aggregate dal 1986, oro->LBMA dal 1968) via
+   beta sull'overlap. ETF a esposizione statica soltanto: i settoriali
+   non si estendono per principio.
+6. MECCANICA COMPLETA nel tab PAC: versamenti mensili con costi ordine,
+   TER, bollo 0,2%, ribilanciamento periodico con tasse sul realizzato
+   (26%, opzione 12,5% sul bucket obbligazionario), glidepath per classe
+   OPZIONALE, decumulo con probabilita' di successo, curve reali
+   (deflazionate).
+7. ANAGRAFICA ETF (data/anagrafica_etf.json): per i principali 12 ETF del
+   catalogo: indice replicato, valuta, copertura, TER, proxy lungo e
+   caveat (es. AGGH hedged -> proxy aggregate senza cambio; il costo di
+   copertura e' assorbito dall'ancora).
+
+---------------------------------------------------------------------------
+D. DATI DI BASE (tab "Dati storia lunga")
+---------------------------------------------------------------------------
+1. Shiller dal 1871 (S&P total return, CPI USA, tassi 10Y -> bond
+   ricostruito), proxy Vanguard/fondi USA dal 1976-96 (total return vero),
+   oro LBMA dal 1968, CPI Italia dal ~1955. Nessuna intersezione: ogni
+   serie tiene la sua lunghezza. Drop-in manuale: data/storia_lunga/*.csv.
+2. Caveat dichiarati: proxy in USD (vol cambio inclusa dove non-hedged),
+   fee storiche dei fondi proxy (leggermente prudenziale), composite
+   world senza Pacifico.
+
+---------------------------------------------------------------------------
+E. VALIDAZIONE E PARAMETRI (tab "Modello & Validazione")
+---------------------------------------------------------------------------
+1. RICOSTRUZIONE COMPARTI: R2, pesi dichiarati vs stimati (RBSA), alfa di
+   gestione, grafico con punto di giunzione. Gate: abilitare la
+   ricostruzione solo se R2 alto e pesi coerenti.
+2. PARAMETRI SUGGERITI DAI DATI:
+   - nu (code grasse): dalla curtosi dei mensili S&P 1871-oggi via
+     k=6/(nu-4). Range sensato 4-6, default 5.
+   - kappa (mean reversion): dal Variance Ratio a 5 anni (VR<1 = mean
+     reversion), mappa prudente kappa ~ 0.5*(1-VR). Range 0.05-0.20,
+     default 0.10.
+   - SHRINKAGE: peso bayesiano w* = tau^2/(tau^2+se^2) con tau ~ 2 p.p.
+     (incertezza di una CMA seria). Per l'azionario la regola mesi/240 e'
+     GENEROSA verso lo storico (10 anni: w 50% vs w* ~15%): se la
+     validazione mostra realizzati spesso sotto la P50, allungare la
+     piena fiducia (300-360 mesi) o adottare ancore CMA. Per
+     l'obbligazionario regola e Bayes quasi coincidono.
+3. VALIDAZIONE OUT-OF-SAMPLE: stima fino all'anno X, simulazione in
+   avanti, confronto col realizzato. Bersagli: copertura banda P10-P90
+   ~80%; rank del montante finale lontano da 0%/100%. E' il criterio
+   OGGETTIVO per tarare shrinkage, nu e blocco.
+4. INFLAZIONE CORRELATA: correlazioni empiriche asset/inflazione dai dati
+   e generatore bootstrap congiunto (rendimento reale, inflazione) con gli
+   stessi indici: pronto per portare i montanti in euro reali stocastici
+   (integrazione nei motori = prossimo passo).
+5. STRESS TEST DETERMINISTICI: 1973-74, 2000-02, 2008-09, 2022 riapplicati
+   al mix corrente: max drawdown, rendimento dell'episodio, mesi di
+   recupero reali. Se il P10 simulato e' migliore dello stress storico
+   su pari orizzonte, il modello e' ottimista sulle code.
+
+---------------------------------------------------------------------------
+F. USCITA: RENDITA vs CAPITALE
+---------------------------------------------------------------------------
+1. Dal fondo almeno il 50% del montante va per legge in rendita vitalizia
+   (eccezioni: rendita minima sotto soglia, vecchi iscritti). La sezione
+   "Uscita in rendita" converte con coefficiente semplificato per eta'
+   (modificabile: usare i coefficienti della convenzione del proprio
+   fondo) e confronta: rendita assicurata a vita (capitale ceduto) vs
+   prelievo 4% dal PAC (capitale ereditabile ma esauribile — probabilita'
+   di successo nel decumulo Monte Carlo del tab PAC).
+
+---------------------------------------------------------------------------
+G. LIMITI DICHIARATI
+---------------------------------------------------------------------------
+- Inflazione nei motori principali ancora deterministica (il generatore
+  congiunto esiste ma non alimenta ancora i montanti).
+- Garanzia del garantito approssimata (floor annuale sul versato).
+- Coefficienti di rendita indicativi, non quelli contrattuali.
+- Fisco PAC senza compensazione minusvalenze (leggermente pessimista);
+  fisco fondo senza dettagli su anticipazioni/RITA.
+- Proxy lunghi in USD; nessun modello esplicito del cambio.
+- Nessuna consulenza finanziaria: strumento di studio.
+===========================================================================

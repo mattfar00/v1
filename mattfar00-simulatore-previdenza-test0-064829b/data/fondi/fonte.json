@@ -1,0 +1,67 @@
+{
+  "nome": "Fon.Te",
+  "csv": "fonte.csv",
+  "sito": "https://www.fondofonte.it",
+  "_note": "Benchmark da ricerca web lug-2026: Sviluppo 25% azioni/75% obbligazioni; Crescita 40/60; Dinamico 60/40; componente azionaria basata su Dow Jones Sustainability World (~azionario globale). Confermare su Nota informativa/DPI vigente. ATTENZIONE: verificare la corrispondenza tra colonne CSV (Conservativo/Sviluppo/Dinamico/Crescita) e comparti ufficiali (Garantito/Sviluppo/Crescita/Dinamico).",
+
+  "comparti": {
+    "Conservativo": {
+      "nome_ufficiale": "Fon.Te Garantito",
+      "classe_rischio": "prudente",
+      "garanzia": true,
+      "obiettivo": "rivalutazione del TFR",
+      "floor_montante": "capitale versato (verificare condizioni esatte)",
+      "benchmark": [],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "fondofonte.it — comparto garantito",
+      "da_verificare": ["condizioni garanzia", "corrispondenza colonna CSV", "ISC"],
+      "_nota": "Gestione assicurativa: non ricostruire (storico reale + shrinkage + floor)."
+    },
+    "Sviluppo": {
+      "nome_ufficiale": "Fon.Te Sviluppo (ex Bilanciato)",
+      "classe_rischio": "bilanciato",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vbmfx", "peso": 0.75,
+         "descrizione_indice": "obbligazionario (gov euro/globale)"},
+        {"serie": "world_composite", "peso": 0.25,
+         "descrizione_indice": "azionario globale (DJ Sustainability World)"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "ricerca web lug-2026: 75% obbligazioni / 25% azioni",
+      "da_verificare": ["pesi su DPI vigente", "spaccatura obbligazionaria (euro vs globale hedged)", "ISC"]
+    },
+    "Crescita": {
+      "nome_ufficiale": "Fon.Te Crescita",
+      "classe_rischio": "bilanciato",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "vbmfx", "peso": 0.60,
+         "descrizione_indice": "obbligazionario (gov euro/globale)"},
+        {"serie": "world_composite", "peso": 0.40,
+         "descrizione_indice": "azionario globale (DJ Sustainability World)"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "ricerca web lug-2026: 60% obbligazioni / 40% azioni",
+      "da_verificare": ["pesi su DPI vigente", "corrispondenza colonna CSV", "ISC"]
+    },
+    "Dinamico": {
+      "nome_ufficiale": "Fon.Te Dinamico",
+      "classe_rischio": "azionario",
+      "garanzia": false,
+      "benchmark": [
+        {"serie": "world_composite", "peso": 0.60,
+         "descrizione_indice": "azionario globale (DJ Sustainability World)"},
+        {"serie": "vbmfx", "peso": 0.40,
+         "descrizione_indice": "obbligazionario (gov euro/globale)"}
+      ],
+      "isc_10a": null,
+      "ricostruzione": "off",
+      "fonte": "ricerca web lug-2026: 60% azioni / 40% obbligazioni",
+      "da_verificare": ["pesi su DPI vigente", "ISC"]
+    }
+  }
+}

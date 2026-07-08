@@ -1,0 +1,3 @@
+{
+  "_DEPRECATO": "Sostituito dalla struttura modulare data/fondi/<fondo>.json (un file per fondo, scoperto automaticamente dall'app). Vedere data/fondi/cometa.json e data/fondi/fonte.json. Questo file non e' letto dal codice."
+}

@@ -1,0 +1,180 @@
+{
+  "_meta": {
+    "descrizione": "Anagrafica di caratterizzazione degli ETF principali del catalogo (2 per categoria prioritaria). Ogni assunzione del modello a storia lunga parte da qui: indice replicato, valuta, copertura cambio, TER e proxy storico assegnato. Campo 'da_verificare': controllare sul KID/factsheet dell'emittente prima di fidarsi.",
+    "immobiliare": "ESCLUSO deliberatamente (priorita' bassa). XREA.MI resta usabile nel motore attuale senza storia lunga.",
+    "serie_proxy_disponibili": {
+      "shiller_sp500": "S&P 500 total return + CPI USA + tassi 10Y, mensile dal 1871 (Shiller/mirror GitHub)",
+      "vfinx": "Vanguard 500 Index, NAV total return mensile dal 1976 (Yahoo)",
+      "veurx": "Vanguard European Stock Index, dal 1990 (Yahoo)",
+      "veiex": "Vanguard Emerging Markets Index, dal 1994 (Yahoo)",
+      "vbmfx": "Vanguard Total Bond Market (USD aggregate), dal 1986 (Yahoo)",
+      "rpibx": "T. Rowe Price International Bond, NON coperto, dal 1986 (Yahoo)",
+      "qqq": "Invesco QQQ (Nasdaq-100 TR), dal 1999 (Yahoo)",
+      "gold_lbma": "Oro fisico, fixing LBMA via FRED, mensile dal 1968",
+      "vusxx": "Vanguard Treasury Money Market (cash/T-bill), dal 1992 (Yahoo)",
+      "cpi_it": "Inflazione Italia (FOI/CPI) via FRED, dal ~1955 - deflatore per euro reali",
+      "world_composite": "Ricostruzione azionario globale: 60% vfinx + 30% veurx + 10% veiex (pesi ~MSCI World+EM attuali; approssimazione dichiarata, manca il Pacifico). Sostituibile con MSCI World ufficiale come drop-in CSV."
+    }
+  },
+
+  "SWDA.MI": {
+    "nome": "iShares Core MSCI World UCITS ETF Acc",
+    "classe": "Azionario",
+    "categoria": "Azionario Globale",
+    "indice": "MSCI World Net Total Return USD",
+    "valuta_fondo": "USD (quotazione EUR su Borsa Italiana)",
+    "hedged": false,
+    "ter": 0.0020,
+    "replica": "fisica ottimizzata",
+    "proxy_lungo": {"serie": "world_composite", "dal": 1976,
+                    "nota": "beta atteso ~1; verifica su overlap con SWDA dal 2009. FX USD/EUR non coperto: vol extra ~2-3% inclusa nei dati proxy in USD - da dichiarare."},
+    "da_verificare": []
+  },
+  "VWCE.DE": {
+    "nome": "Vanguard FTSE All-World UCITS ETF Acc",
+    "classe": "Azionario",
+    "categoria": "Azionario Globale",
+    "indice": "FTSE All-World (sviluppati + emergenti, ~90% world + 10% EM)",
+    "valuta_fondo": "USD (quotazione EUR su Xetra)",
+    "hedged": false,
+    "ter": 0.0022,
+    "replica": "fisica ottimizzata",
+    "proxy_lungo": {"serie": "world_composite", "dal": 1976,
+                    "nota": "il composite include gia' ~10% EM: coerente con FTSE All-World piu' che con MSCI World."},
+    "da_verificare": []
+  },
+
+  "CSSPX.MI": {
+    "nome": "iShares Core S&P 500 UCITS ETF Acc",
+    "classe": "Azionario",
+    "categoria": "Azionario USA",
+    "indice": "S&P 500 Net Total Return",
+    "valuta_fondo": "USD (quotazione EUR)",
+    "hedged": false,
+    "ter": 0.0007,
+    "replica": "fisica",
+    "proxy_lungo": {"serie": "vfinx", "dal": 1976,
+                    "nota": "proxy quasi perfetto (stesso indice); estendibile al 1871 con shiller_sp500 per le ancore. Beta atteso 1.00."},
+    "da_verificare": []
+  },
+  "EQAC.MI": {
+    "nome": "Invesco Nasdaq-100 UCITS ETF Acc",
+    "classe": "Azionario",
+    "categoria": "Azionario USA",
+    "indice": "Nasdaq-100 Notional Net Total Return",
+    "valuta_fondo": "USD (quotazione EUR)",
+    "hedged": false,
+    "ter": 0.0030,
+    "replica": "fisica",
+    "proxy_lungo": {"serie": "qqq", "dal": 1999,
+                    "nota": "solo 27 anni ma include il crollo dot-com 2000-02 (-80%): campione gia' rappresentativo delle code. NON usare ^IXIC pre-1999: price-only, sottostima il TR. Vol attesa 22-28%: avviso volatilita' atteso."},
+    "da_verificare": ["ter"]
+  },
+
+  "XESC.MI": {
+    "nome": "Xtrackers Euro Stoxx 50 UCITS ETF 1C",
+    "classe": "Azionario",
+    "categoria": "Azionario Europa",
+    "indice": "Euro Stoxx 50 Net Total Return",
+    "valuta_fondo": "EUR",
+    "hedged": false,
+    "ter": 0.0009,
+    "replica": "fisica",
+    "proxy_lungo": {"serie": "veurx", "dal": 1990,
+                    "nota": "VEURX e' Europa larga (FTSE Developed Europe) in USD, non Euro Stoxx 50 in EUR: beta da stimare su overlap (~0.9-1.1), correlazione attesa ~0.95. FX: VEURX in USD ha vol cambio che XESC (EUR nativo) non ha - correzione o dichiarazione."},
+    "da_verificare": []
+  },
+  "CEBL.MI": {
+    "nome": "iShares Core MSCI EMU UCITS ETF Acc",
+    "classe": "Azionario",
+    "categoria": "Azionario Europa",
+    "indice": "MSCI EMU Net Total Return (solo eurozona)",
+    "valuta_fondo": "EUR",
+    "hedged": false,
+    "ter": 0.0012,
+    "replica": "fisica",
+    "proxy_lungo": {"serie": "veurx", "dal": 1990,
+                    "nota": "stesso caveat FX di XESC; MSCI EMU esclude UK/Svizzera che in VEURX ci sono: beta su overlap."},
+    "da_verificare": ["ticker esatto classe Acc su Borsa Italiana"]
+  },
+
+  "EIMI.MI": {
+    "nome": "iShares Core MSCI EM IMI UCITS ETF Acc",
+    "classe": "Azionario",
+    "categoria": "Azionario Mercati Emergenti",
+    "indice": "MSCI Emerging Markets IMI Net TR",
+    "valuta_fondo": "USD (quotazione EUR)",
+    "hedged": false,
+    "ter": 0.0018,
+    "replica": "fisica ottimizzata",
+    "proxy_lungo": {"serie": "veiex", "dal": 1994,
+                    "nota": "buon proxy (EM larga, TR). 30 anni con dentro 1997-98, 2008, 2015, 2022. Vol attesa ~20%."},
+    "da_verificare": []
+  },
+  "XMME.MI": {
+    "nome": "Xtrackers MSCI Emerging Markets UCITS ETF 1C",
+    "classe": "Azionario",
+    "categoria": "Azionario Mercati Emergenti",
+    "indice": "MSCI Emerging Markets Net TR",
+    "valuta_fondo": "USD (quotazione EUR)",
+    "hedged": false,
+    "ter": 0.0018,
+    "replica": "fisica ottimizzata",
+    "proxy_lungo": {"serie": "veiex", "dal": 1994, "nota": "come EIMI."},
+    "da_verificare": []
+  },
+
+  "AGGH.MI": {
+    "nome": "iShares Core Global Aggregate Bond UCITS ETF EUR-Hedged Acc",
+    "classe": "Obbligazionario",
+    "categoria": "Obbligazionario",
+    "indice": "Bloomberg Global Aggregate Bond (EUR hedged)",
+    "valuta_fondo": "EUR (coperto)",
+    "hedged": true,
+    "ter": 0.0010,
+    "replica": "fisica ottimizzata (campionamento)",
+    "proxy_lungo": {"serie": "vbmfx", "dal": 1986,
+                    "nota": "VBMFX = aggregate USA in USD. Per un fondo EUR-HEDGED e' il proxy giusto in termini di RISCHIO (l'hedging rimuove il cambio, resta la dinamica tassi/credito, molto correlata tra USA e globale). Il RENDIMENTO va corretto del differenziale tassi EUR-USD (costo hedging, storicamente 0-3%/anno): lo shrinkage verso l'ancora obbligazionaria 2,5% assorbe gran parte del bias. NON usare RPIBX (unhedged: vol cambio che AGGH non ha)."},
+    "da_verificare": []
+  },
+  "XG7S.MI": {
+    "nome": "Xtrackers II Global Government Bond UCITS ETF EUR-Hedged Acc",
+    "classe": "Obbligazionario",
+    "categoria": "Obbligazionario",
+    "indice": "FTSE World Government Bond Index - Developed Markets (EUR hedged)",
+    "valuta_fondo": "EUR (coperto)",
+    "hedged": true,
+    "ter": 0.0025,
+    "replica": "fisica ottimizzata",
+    "quota_titoli_stato": 1.0,
+    "proxy_lungo": {"serie": "vbmfx", "dal": 1986,
+                    "nota": "solo governativi vs aggregate (che ha ~30% credito): duration simile, vol leggermente inferiore per XG7S. Stesso caveat costo hedging di AGGH. Alternativa piu' fine: ricostruzione TR dai tassi 10Y Shiller dal 1871 per le ancore."},
+    "da_verificare": []
+  },
+
+  "SGLN.MI": {
+    "nome": "iShares Physical Gold ETC",
+    "classe": "Oro/Materie prime",
+    "categoria": "Oro e Materie Prime",
+    "indice": "prezzo spot oro (LBMA Gold Price)",
+    "valuta_fondo": "USD (quotazione EUR)",
+    "hedged": false,
+    "ter": 0.0012,
+    "replica": "fisica (lingotti allocati)",
+    "proxy_lungo": {"serie": "gold_lbma", "dal": 1968,
+                    "nota": "proxy esatto: stesso sottostante. 57 anni con dentro il 1970s (+1500%) e il 1980-99 (-70% reale): entrambe le code. Fiscalita': ETC = 26%, non 12,5%."},
+    "da_verificare": []
+  },
+  "SGLD.MI": {
+    "nome": "Invesco Physical Gold ETC",
+    "classe": "Oro/Materie prime",
+    "categoria": "Oro e Materie Prime",
+    "indice": "prezzo spot oro (LBMA Gold Price)",
+    "valuta_fondo": "USD (quotazione EUR)",
+    "hedged": false,
+    "ter": 0.0012,
+    "replica": "fisica",
+    "proxy_lungo": {"serie": "gold_lbma", "dal": 1968, "nota": "come SGLN."},
+    "da_verificare": []
+  }
+}
