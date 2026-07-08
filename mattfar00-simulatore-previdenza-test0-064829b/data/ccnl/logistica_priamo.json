@@ -1,0 +1,42 @@
+{
+  "nome": "Logistica e Trasporto Merci",
+  "fondo": "Priamo",
+  "_fonte": "CCNL Logistica/Trasporto Merci/Spedizione, rinnovo 6/12/2024 (aumento 140 e sui minimi + EPA in tranche 2025-2027). Fondo: Previlog e' confluito in PRIAMO dal 1/10/2017. Under-35 nuove adesioni dal 1/1/2025: +0,2% datore.",
+  "_ATTENZIONE": "Minimi tabellari del personale NON VIAGGIANTE: valori STIMATI (tabella ufficiale Confetra/tranche 2025-26 da verificare). Contributi Priamo per la logistica (1%/1%) e scatti INDICATIVI: verificare su CCNL art. previdenza complementare.",
+
+  "contrib_lav_pct": 0.01,
+  "contrib_azienda_pct": 0.01,
+  "contrib_azienda_u35_pct": 0.012,
+  "tfr_pct": 0.0691,
+  "costo_iniziale": 0.0,
+  "costo_fisso": 22.0,
+  "mensilita": 14,
+
+  "livelli": {
+    "6°": 1760.00,
+    "5°": 1855.00,
+    "4°": 1960.00,
+    "3°": 2065.00,
+    "3° Super": 2160.00,
+    "2°": 2360.00,
+    "1°": 2560.00,
+    "Quadro": 2780.00
+  },
+  "scatti_valore_livello": {
+    "6°": 12.0,
+    "5°": 13.0,
+    "4°": 14.5,
+    "3°": 15.5,
+    "3° Super": 16.5,
+    "2°": 18.5,
+    "1°": 20.5,
+    "Quadro": 23.0
+  },
+  "scatto_ogni_anni": 2,
+  "scatti_max": 5,
+
+  "comparti": [
+    "Garantito Protezione",
+    "Bilanciato Sviluppo"
+  ]
+}

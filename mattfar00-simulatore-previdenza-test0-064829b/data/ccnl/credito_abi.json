@@ -1,0 +1,45 @@
+{
+  "nome": "Credito (ABI)",
+  "fondo": "Previdenza Credito",
+  "_fonte": "CCNL Credito ABI rinnovato 23/11/2023 (aumenti in 4 tranche fino a marzo 2026). Minimi dal 1/7/2023 VERIFICATI per 3a Area (L1 2.599,29 / L2 2.739,63 / L3 2.899,88 / L4 3.156,90) e Quadri Direttivi (QD2 3.760,45 / QD3 4.180,89 / QD4 4.911,48).",
+  "_ATTENZIONE": "Nel credito NON esiste un fondo negoziale nazionale unico: ogni gruppo bancario ha il proprio fondo (contributo datore tipico 3,5-4,5%, lavoratore ~2%, su base piu' ampia dei minimi). 'Previdenza Credito' e' un MODELLO GENERICO di fondo bancario, simulabile via ricostruzione dal benchmark. QD1, 2a Area e scatti: valori STIMATI. Verificare i propri valori aziendali.",
+
+  "contrib_lav_pct": 0.02,
+  "contrib_azienda_pct": 0.04,
+  "contrib_azienda_u35_pct": 0.04,
+  "tfr_pct": 0.0691,
+  "costo_iniziale": 0.0,
+  "costo_fisso": 0.0,
+  "mensilita": 13,
+
+  "livelli": {
+    "2ª Area L3": 2450.00,
+    "3ª Area L1": 2599.29,
+    "3ª Area L2": 2739.63,
+    "3ª Area L3": 2899.88,
+    "3ª Area L4": 3156.90,
+    "QD1": 3446.00,
+    "QD2": 3760.45,
+    "QD3": 4180.89,
+    "QD4": 4911.48
+  },
+  "scatti_valore_livello": {
+    "2ª Area L3": 35.0,
+    "3ª Area L1": 40.0,
+    "3ª Area L2": 43.0,
+    "3ª Area L3": 46.0,
+    "3ª Area L4": 50.0,
+    "QD1": 55.0,
+    "QD2": 60.0,
+    "QD3": 65.0,
+    "QD4": 70.0
+  },
+  "scatto_ogni_anni": 3,
+  "scatti_max": 8,
+
+  "comparti": [
+    "Prudente",
+    "Bilanciato",
+    "Azionario"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "nome": "Chimico-Farmaceutico",
+  "fondo": "Fonchim",
+  "_fonte": "Rinnovo CCNL 15/4/2025 (vigenza 1/7/2025-30/6/2028). Contributi Fonchim: azienda 2,10% (2,30% dal 1/1/2027), lavoratore minimo 1,20%. TEM range verificato: F ~1.781 e, A1 ~3.438 e (dic 2025).",
+  "_ATTENZIONE": "I TEM dei livelli INTERMEDI sono STIME per interpolazione (solo F e A1 verificati): sostituire con la tabella ufficiale Federchimica/Farmindustria dic-2025. Anche gli scatti sono INDICATIVI.",
+
+  "contrib_lav_pct": 0.012,
+  "contrib_azienda_pct": 0.021,
+  "contrib_azienda_u35_pct": 0.021,
+  "tfr_pct": 0.0691,
+  "costo_iniziale": 0.0,
+  "costo_fisso": 24.0,
+  "mensilita": 13,
+
+  "livelli": {
+    "F": 1781.00,
+    "E": 1930.00,
+    "D1": 2085.00,
+    "D2": 2210.00,
+    "C1": 2380.00,
+    "C2": 2560.00,
+    "B1": 2820.00,
+    "B2": 3050.00,
+    "A1": 3438.00
+  },
+  "scatti_valore_livello": {
+    "F": 22.0,
+    "E": 24.0,
+    "D1": 27.0,
+    "D2": 29.0,
+    "C1": 32.0,
+    "C2": 35.0,
+    "B1": 38.0,
+    "B2": 42.0,
+    "A1": 46.0
+  },
+  "scatto_ogni_anni": 2,
+  "scatti_max": 5,
+
+  "comparti": [
+    "Moneta",
+    "Stabilità",
+    "Crescita"
+  ]
+}
