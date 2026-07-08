@@ -570,6 +570,15 @@ with st.sidebar.expander("🎯 Correzione realismo del drift (shrinkage)", expan
     )
     usa_shrinkage_fondo = st.checkbox("Applica shrinkage al fondo", value=True,
                                       key="shrink_fondo_on")
+    mesi_piena_fiducia = st.number_input(
+        "Mesi per piena fiducia allo storico", 120, 480, 240, 12,
+        key="mesi_fiducia",
+        help="w = mesi disponibili / questo valore (cap 100%). Con 240 (20 "
+             "anni) i comparti con storico lungo NON vengono corretti (w=100%). "
+             "Il confronto bayesiano nel tab '🔬 Modello & Validazione' "
+             "suggerisce 300-360+ per l'azionario se l'ancora è una CMA "
+             "seria. Vale per fondo E per il PAC a ticker.",
+    )
     ancora_azionario = st.number_input(
         "Ancora comparti azionari (CAGR nominale %)", 0.0, 12.0, 6.5, 0.1,
         key="anc_az", disabled=not usa_shrinkage_fondo)
@@ -585,11 +594,37 @@ st.sidebar.markdown("**Factor modeling (storia lunga)**")
 usa_ricostruite = st.sidebar.checkbox(
     "Usa serie RICOSTRUITE dal benchmark (factor modeling)", value=False,
     key="usa_ricostruite",
-    help="Per i comparti con `ricostruzione: \"consentita\"` in data/fondi/, "
-         "il bootstrap usa la serie ESTESA (NAV reale + mix benchmark "
-         "alfa-aggiustato all'indietro, decenni invece di anni). Verifica "
-         "prima qualità e R² nel tab '🔬 Modello & Validazione'.",
+    help="COS'È: i comparti hanno pochi anni di quote (Garantito dal 2020, "
+         "Fon.Te dal 2008...). La ricostruzione estende lo storico "
+         "all'indietro col MIX DEL BENCHMARK dichiarato dal comparto "
+         "(es. 60% azionario globale + 40% bond), costruito sulle serie "
+         "lunghe (dal 1976-86) e corretto dell'alfa di gestione stimato "
+         "sull'overlap. Il bootstrap poi ricampiona DECENNI (con dentro "
+         "2008, 2000, ...) invece del solo regime recente. Qualità del "
+         "mapping (R², pesi stimati vs dichiarati): tab '🔬 Modello & "
+         "Validazione', sezione 1.",
 )
+override_ricostruzione = {}
+if usa_ricostruite:
+    st.sidebar.caption(
+        "Attiva/disattiva PER COMPARTO (solo quelli con benchmark in "
+        "anagrafica; i garantiti sono esclusi by design). Prima di fidarti: "
+        "controlla l'R² nel tab Modello e i pesi sul DPI del fondo."
+    )
+    for _f_r, _cfg_r in ANAGRAFICA_FONDI.items():
+        for _c_r, _i_r in (_cfg_r.get("comparti") or {}).items():
+            if not _i_r.get("benchmark"):
+                continue
+            _default_r = _i_r.get("ricostruzione") == "consentita"
+            override_ricostruzione[(_f_r, _c_r)] = st.sidebar.toggle(
+                f"Ricostruisci {_f_r} · {_c_r}", value=_default_r,
+                key=f"ric_{_f_r}_{_c_r}",
+                help=("Benchmark: " +
+                      " + ".join(f"{v['peso']:.0%} {v['serie']}"
+                                 for v in _i_r["benchmark"]) +
+                      (". ⚠️ Da verificare: " + "; ".join(_i_r["da_verificare"])
+                       if _i_r.get("da_verificare") else "")),
+            )
 
 st.sidebar.markdown("**Glidepath di comparto (life-cycle)**")
 usa_switch_comparto = st.sidebar.checkbox(
@@ -1289,21 +1324,39 @@ for ki, key in enumerate(comparto_keys):
         # --- FACTOR MODELING: serie estesa dal benchmark, se consentita ----
         if usa_ricostruite:
             _cfg_c = ANAGRAFICA_FONDI.get(fondo_k, {}).get("comparti", {}).get(comp_k)
-            if _cfg_c:
+            if not _cfg_c or not _cfg_c.get("benchmark"):
+                info_shrinkage_fondo.append(
+                    f"{fondo_k} · {comp_k}: ricostruzione non disponibile "
+                    f"(nessun benchmark in anagrafica — i garantiti sono "
+                    f"esclusi by design)")
+            elif not override_ricostruzione.get((fondo_k, comp_k), False):
+                info_shrinkage_fondo.append(
+                    f"{fondo_k} · {comp_k}: ricostruzione DISATTIVATA dal "
+                    f"pulsante in sidebar")
+            else:
+                # Il pulsante in sidebar comanda: forza 'consentita' nel cfg
+                _cfg_eff = dict(_cfg_c)
+                _cfg_eff["ricostruzione"] = "consentita"
                 _est = serie_estesa_comparto(
                     _PERCORSI_TROVATI.get(fondo_k, ""), comp_k,
-                    json.dumps(_cfg_c, sort_keys=True))
+                    json.dumps(_cfg_eff, sort_keys=True))
                 if _est is not None:
                     serie = tuple(np.round(_est, 10))
                     info_shrinkage_fondo.append(
                         f"{fondo_k} · {comp_k}: serie RICOSTRUITA dal "
                         f"benchmark ({len(serie)} mesi; il taglio "
                         f"'escludi anni' non si applica)")
+                else:
+                    info_shrinkage_fondo.append(
+                        f"{fondo_k} · {comp_k}: ricostruzione NON riuscita "
+                        f"(serie proxy non scaricabili o overlap "
+                        f"insufficiente — vedi tab Dati)")
         # --- SHRINKAGE: ricentra la serie verso l'ancora di lungo periodo ---
         if usa_shrinkage_fondo and serie:
             cagr_camp = cagr_da_mensili(serie)
             ancora_k = ancora_per_comparto(fondo_k, comp_k)
-            cagr_corr, w_camp = shrink_verso_ancora(cagr_camp, len(serie), ancora_k)
+            cagr_corr, w_camp = shrink_verso_ancora(cagr_camp, len(serie), ancora_k,
+                                                    mesi_pieni=int(mesi_piena_fiducia))
             serie = tuple(ricentra_mensili(serie, cagr_corr))
             info_shrinkage_fondo.append(
                 f"{fondo_k} · {comp_k}: {len(serie)} mesi, CAGR storico "
@@ -1317,7 +1370,47 @@ for ki, key in enumerate(comparto_keys):
             mancanti.append(f"{fondo_k} · {comp_k} (serie mensile troppo corta dopo il "
                             f"taglio all'anno {anno_inizio_storico}: {e})")
     else:
-        mancanti.append(f"{fondo_k} · {comp_k} (serie mensile)")
+        # Nessun NAV nel CSV: il comparto e' simulabile SOLO via
+        # ricostruzione dal benchmark (mix puro, alfa 0) se attivata.
+        serie_mix = None
+        if usa_ricostruite and override_ricostruzione.get((fondo_k, comp_k), False):
+            _cfg_c = ANAGRAFICA_FONDI.get(fondo_k, {}).get("comparti", {}).get(comp_k)
+            if _cfg_c and _cfg_c.get("benchmark"):
+                _cfg_eff = dict(_cfg_c)
+                _cfg_eff["ricostruzione"] = "consentita"
+                _est = serie_estesa_comparto(
+                    _PERCORSI_TROVATI.get(fondo_k, ""), comp_k,
+                    json.dumps(_cfg_eff, sort_keys=True))
+                if _est is not None:
+                    serie_mix = tuple(np.round(_est, 10))
+        if serie_mix is None:
+            mancanti.append(
+                f"{fondo_k} · {comp_k} (nessun NAV nel CSV — se il comparto "
+                f"ha un benchmark in anagrafica, attiva 'Usa serie "
+                f"RICOSTRUITE' e il pulsante del comparto in sidebar per "
+                f"simularlo dal mix benchmark)")
+        else:
+            info_shrinkage_fondo.append(
+                f"{fondo_k} · {comp_k}: NESSUN NAV — serie interamente dal "
+                f"MIX BENCHMARK ({len(serie_mix)} mesi, alfa 0: costi reali "
+                f"non inclusi)")
+            if usa_shrinkage_fondo:
+                cagr_camp = cagr_da_mensili(serie_mix)
+                ancora_k = ancora_per_comparto(fondo_k, comp_k)
+                cagr_corr, w_camp = shrink_verso_ancora(
+                    cagr_camp, len(serie_mix), ancora_k,
+                    mesi_pieni=int(mesi_piena_fiducia))
+                serie_mix = tuple(ricentra_mensili(serie_mix, cagr_corr))
+                info_shrinkage_fondo.append(
+                    f"{fondo_k} · {comp_k}: CAGR mix {cagr_camp*100:.2f}% → "
+                    f"corretto {cagr_corr*100:.2f}% (peso storico "
+                    f"{w_camp*100:.0f}%, ancora {ancora_k*100:.1f}%)")
+            try:
+                mat_per_comparto[key] = genera_rendimenti_block_bootstrap(
+                    serie_mix, durata, block=int(block_mesi), n=N_BAND,
+                    seed=st.session_state.master_seed + ki)
+            except ValueError as e:
+                mancanti.append(f"{fondo_k} · {comp_k} (mix benchmark troppo corto: {e})")
 
 if mancanti:
     st.error(
@@ -1356,7 +1449,8 @@ if usa_portafoglio:
                 info_drift_pac = (f"Drift manuale: CAGR {cagr_target*100:.2f}% "
                                   f"(storico {cagr_storico*100:.2f}% su {n_mesi} mesi)")
             elif usa_shrinkage_pac:
-                cagr_target, w_camp = shrink_verso_ancora(cagr_storico, n_mesi, ancora_pac)
+                cagr_target, w_camp = shrink_verso_ancora(cagr_storico, n_mesi, ancora_pac,
+                                                          mesi_pieni=int(mesi_piena_fiducia))
                 info_drift_pac = (f"Shrinkage: CAGR storico {cagr_storico*100:.2f}% "
                                   f"({n_mesi} mesi, peso {w_camp*100:.0f}%) + ancora "
                                   f"{ancora_pac*100:.1f}% → target {cagr_target*100:.2f}%")
