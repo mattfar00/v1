@@ -114,6 +114,25 @@ def carica_fred(nome: str):
                 return out
         except Exception:
             continue
+    # Fallback per l'ORO: le serie LBMA su FRED sono state dismesse (2024).
+    # Yahoo: futures COMEX GC=F dal 2000, poi ETC GLD dal 2004.
+    if nome == "gold_lbma":
+        try:
+            import yfinance as yf
+            for tk in ("GC=F", "GLD"):
+                data = yf.download(tk, period="max", interval="1mo",
+                                   progress=False, auto_adjust=True,
+                                   actions=False)
+                if data is None or data.empty:
+                    continue
+                col = data["Close"]
+                if isinstance(col, pd.DataFrame):
+                    col = col.iloc[:, 0]
+                out = _da_livelli_a_rendimenti(col)
+                if len(out) > 24:
+                    return out
+        except Exception:
+            pass
     return None
 
 
@@ -217,7 +236,8 @@ def carica_tutte_le_serie():
             serie[nome] = s
             note[nome] = f"FRED {PROXY_FRED[nome][0]}"
         else:
-            note[nome] = (f"⚠️ FRED {PROXY_FRED[nome][0]} non disponibile — "
+            note[nome] = (f"⚠️ FRED {PROXY_FRED[nome][0]} non disponibile "
+                          f"(per l'oro il fallback Yahoo GC=F/GLD è automatico) — "
                           f"drop-in: data/storia_lunga/{nome}.csv")
 
     wc = costruisci_world_composite()
@@ -298,3 +318,4 @@ def render_tab_dati():
         "in USD); la deflazione in euro reali italiani (CPI Italia) entra "
         "nei motori al Blocco D."
     )
+
